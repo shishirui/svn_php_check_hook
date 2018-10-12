@@ -2,7 +2,7 @@
 
 Automatically checking for php syntax errors before commit to svn.
 
-### features
+### Features
 
 1. Check php syntax errors.
 1. Check commit message can not be empth and the length must be greater than 10.
