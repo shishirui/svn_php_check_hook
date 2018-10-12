@@ -104,13 +104,13 @@ class svnCheck
                     //检查文件编码
                     $fileContent = implode("\r\n", $fileContent);
                     if(!$this->checkFileEncoding($fileContent)){
-                        $messageList[] = $fileName.'文件编码不正确,只允许提交 UTF-8 编码的文件';
+                        $messageList[] = $fileName . 'File encoding must be UTF-8';
                     }
 
                     // 检查文件内容
                     $illegal = $this->checkFileContent($fileContent);
                     if($illegal){
-                        $messageList[] = $fileName.'文件中包含 ' . $illegal . ' 等内容，不允许提交';
+                        $messageList[] = $fileName . ' contains illegal words: ' . $illegal;
                     }
 
                     $illegal = $this->checkFileSyntax($fileContent, $fileName);
@@ -149,7 +149,7 @@ class svnCheck
     private function checkFileSyntax($fileContent, $filename = '')
     {
         if(!file_put_contents($this->tempPhpPath, $fileContent)){
-            return 'php 临时文件写入失败,请联系管理员';
+            return 'php temp file write error';
         }
 
         $cmd = ' php -l '.$this->tempPhpPath;
