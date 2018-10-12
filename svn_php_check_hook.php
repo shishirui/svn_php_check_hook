@@ -8,18 +8,22 @@ class svnCheck
     private $illegalInfo    = [ 'http://test' ,'https://test' ];
     private $tempPhpPath    = '/tmp/svn_temp.php';
 
-    public function __construct($repoName, $trxNum)
+    public function __construct()
     {
-        $this->repoName = $repoName;
-        $this->trxNum = $trxNum;
+        global $argv;
+
+        if (count($argv) < 2) {
+            return $this->output("\nParams missing for svn checker. Please check pre_commit hook.");
+        }
+
+        $this->repoName = $argv[1];
+        $this->trxNum = $argv[2];
     }
 
-    public function runCheck()
+    public function run()
     {
-        $commitErrMsg = $this->checkCommitMessage();
-        $runCheckMsg = $this->checkFile();
-
-        $messageList = array_merge($commitErrMsg, $runCheckMsg);
+        $output = '';
+        $messageList = array_merge($this->checkCommitMessage(), $this->checkFile());
 
         if ($messageList) {
             $result = "\n";
@@ -28,10 +32,21 @@ class svnCheck
                 $message = trim($message);
                 $result .= "[$index] $message\n";
             }
-            return $result;
+            $output = $result;
         }
 
-        return '';
+        $this->output($output);
+    }
+
+    private function output($output)
+    {
+        if ($output) {
+            $stdErr = fopen('php://stderr', 'w');
+            fwrite($stdErr, $output);
+            exit(1);
+        }
+
+        exit(0);
     }
 
     private function getCommitMessage()
@@ -151,18 +166,6 @@ class svnCheck
 
 }
 
-//获取指定参数
-if (count($argv) < 2) {
-    throw new Exception("参数缺失");
-}
+$svnCheck = new svnCheck();
+$svnCheck->run();
 
-$svnCheck = new svnCheck($argv[1], $argv[2]);
-$svnInfo  = $svnCheck->runCheck();
-
-if(!$svnInfo){
-    exit(0);
-} else {
-    $stdErr = fopen('php://stderr', 'w');
-    fwrite($stdErr, $svnInfo);
-    exit(1);
-}
