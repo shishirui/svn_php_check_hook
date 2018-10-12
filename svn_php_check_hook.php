@@ -84,20 +84,20 @@ class svnCheck
                 $position = strrpos($fileName,'.');
                 $suffix = substr($fileName,$position + 1);
 
-                //检查文件编码
-                $fileContent = implode("\r\n",$fileContent);
-                if(!$this->checkFileEncoding($fileContent)){
-                    $messageList[] = $fileName.'文件编码不正确,只允许提交 UTF-8 编码的文件';
-                }
-
-                // 检查文件内容
-                $illegal = $this->checkFileContent($fileContent);
-                if($illegal){
-                    $messageList[] = $fileName.'文件中包含 ' . $illegal . ' 等内容，不允许提交';
-                }
-
                 // 检查语法
-                if ($suffix == 'php'){
+                if ($suffix == 'php') {
+                    //检查文件编码
+                    $fileContent = implode("\r\n", $fileContent);
+                    if(!$this->checkFileEncoding($fileContent)){
+                        $messageList[] = $fileName.'文件编码不正确,只允许提交 UTF-8 编码的文件';
+                    }
+
+                    // 检查文件内容
+                    $illegal = $this->checkFileContent($fileContent);
+                    if($illegal){
+                        $messageList[] = $fileName.'文件中包含 ' . $illegal . ' 等内容，不允许提交';
+                    }
+
                     $illegal = $this->checkFileSyntax($fileContent, $fileName);
                     if ($illegal){
                         $messageList[] = $illegal;
