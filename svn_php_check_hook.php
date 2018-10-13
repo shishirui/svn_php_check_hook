@@ -1,11 +1,11 @@
 <?php
 
-class svnCheck
+class Svn_php_check_hook
 {
     private $repoName       = '';
     private $trxNum         = '';
     private $commitFiles    = [ ];
-    private $illegalInfo    = [ 'http://test' ,'https://test' ];
+    private $illegalInfo    = [ 'var_dump' ,'print_r' ];
     private $tempPhpPath    = '/tmp/svn_temp.php';
 
     public function __construct()
@@ -95,24 +95,25 @@ class svnCheck
         if($this->commitFiles){
             foreach($this->commitFiles as $fileName => $fileContent){
 
-                //检查文件类型
-                $position = strrpos($fileName,'.');
-                $suffix = substr($fileName,$position + 1);
+                $position = strrpos($fileName, '.');
+                $suffix = substr($fileName, $position + 1);
 
-                // 检查语法
                 if ($suffix == 'php') {
-                    //检查文件编码
+                    // check encoding
                     $fileContent = implode("\r\n", $fileContent);
                     if(!$this->checkFileEncoding($fileContent)){
                         $messageList[] = $fileName . 'File encoding must be UTF-8';
                     }
 
-                    // 检查文件内容
-                    $illegal = $this->checkFileContent($fileContent);
-                    if($illegal){
-                        $messageList[] = $fileName . ' contains illegal words: ' . $illegal;
+                    // check illegal words
+                    $words = $this->checkFileContent($fileContent);
+                    if ($words){
+                        foreach ($words as $line => $word) {
+                            $messageList[] = "$fileName:$line contains illegal word: $word";
+                        }
                     }
 
+                    // check syntax
                     $illegal = $this->checkFileSyntax($fileContent, $fileName);
                     if ($illegal){
                         $messageList[] = $illegal;
@@ -135,15 +136,23 @@ class svnCheck
 
     private function checkFileContent($fileContent)
     {
-        if($this->illegalInfo){
-            foreach($this->illegalInfo as $illegal){
-                 if(strpos($fileContent, $illegal) !== false){
-                     return $illegal;
-                 }
+        $words = [];
+
+        if ($this->illegalInfo){
+            foreach ($this->illegalInfo as $illegal) {
+                $lines = explode("\n", $fileContent);
+                foreach($lines as $num => $line){
+                    $pos = strpos($line, $illegal);
+                    if($pos !== false) {
+                        $words[$num] = $illegal;
+                    }
+                }
             }
         }
 
-        return '';
+        ksort($words);
+
+        return $words;
     }
 
     private function checkFileSyntax($fileContent, $filename = '')
@@ -166,6 +175,6 @@ class svnCheck
 
 }
 
-$svnCheck = new svnCheck();
+$svnCheck = new Svn_php_check_hook();
 $svnCheck->run();
 
